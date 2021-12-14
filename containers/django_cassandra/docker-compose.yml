@@ -1,0 +1,70 @@
+version: '3.8'
+services:
+  cas1:
+    image: cassandra:latest
+    hostname: cas1
+    container_name: cas1
+    mem_limit: 1g
+    healthcheck:
+        test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+        interval: 5s
+        timeout: 5s
+        retries: 60
+    ports:
+      - "9042:9042"  # Expose native binary CQL port for your apps
+    volumes:
+      - ${MOUNT_PATH}/cassandra/node1:/var/lib/cassandra/data
+      - ${MOUNT_PATH}/cassandra/cassandra_init.sh:/cassandra_init.sh
+    environment:
+        CASSANDRA_CLUSTER_NAME: cas_cluster
+        CASSANDRA_DC: datacenter_1
+        CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+        #CASSANDRA_RACK: West
+        #CASSANDRA_NUM_TOKENS: 128
+    networks:
+      - djcas-net
+    command: sh /cassandra_init.sh
+
+  cas2:
+    image: cassandra:latest
+    hostname: cas2
+    container_name: cas2
+    mem_limit: 1g
+    healthcheck:
+        test: ["CMD", "cqlsh", "-e", "describe keyspaces" ]
+        interval: 5s
+        timeout: 5s
+        retries: 60
+    ports:
+      - "9043:9042"  # Expose native binary CQL port for your apps
+    volumes:
+      - ${MOUNT_PATH}/cassandra/node2:/var/lib/cassandra/data
+    environment:
+        CASSANDRA_CLUSTER_NAME: cas_cluster
+        CASSANDRA_DC: datacenter_1
+        CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+        CASSANDRA_SEEDS: "cas1" # cas1 seeds cas2 with information
+        #CASSANDRA_RACK: West
+        #CASSANDRA_NUM_TOKENS: 128
+    networks:
+      - djcas-net
+    depends_on:
+      cas1:    # start cas2 only after cas1 is healthy
+        condition: service_healthy
+
+  django_c:
+    container_name: django_c
+    image: django-img
+    environment:
+      - CASSANDRA_SEEDS='cas1'
+    ports:
+      - '8000:8000'
+    volumes:
+      - ${MOUNT_PATH}/django/src:/root
+    networks:
+      - djcas-net
+    depends_on:
+      cas1:    # start django_c after at least one cassandra node is ready
+        condition: service_healthy
+networks:
+  djcas-net:
