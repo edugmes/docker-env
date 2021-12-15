@@ -13,8 +13,8 @@ services:
     ports:
       - "9042:9042"  # Expose native binary CQL port for your apps
     volumes:
-      - ${MOUNT_PATH}/cassandra/node1:/var/lib/cassandra/data
-      - ${MOUNT_PATH}/cassandra/cassandra_init.sh:/cassandra_init.sh
+      - ./cassandra/node1:/var/lib/cassandra/data
+      - ./cassandra/cassandra_init.sh:/cassandra_init.sh
     environment:
         CASSANDRA_CLUSTER_NAME: cas_cluster
         CASSANDRA_DC: datacenter_1
@@ -38,7 +38,7 @@ services:
     ports:
       - "9043:9042"  # Expose native binary CQL port for your apps
     volumes:
-      - ${MOUNT_PATH}/cassandra/node2:/var/lib/cassandra/data
+      - ./cassandra/node2:/var/lib/cassandra/data
     environment:
         CASSANDRA_CLUSTER_NAME: cas_cluster
         CASSANDRA_DC: datacenter_1
@@ -60,7 +60,7 @@ services:
     ports:
       - '8000:8000'
     volumes:
-      - ${MOUNT_PATH}/django/src:/root
+      - ${SRC_PATH}:/root
     networks:
       - djcas-net
     depends_on:
