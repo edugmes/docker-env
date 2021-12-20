@@ -1,6 +1,4 @@
-cas_query="create keyspace if not exists posts_k with replication = {'class': 'SimpleStrategy', 'replication_factor': 2};"
-
-until echo $cas_query | cqlsh
+until cqlsh -f ./init.cql
 do
 	now=$(date +%T)
 	echo "[$now INIT CQLSH]: Node still unavailable, will retry another time"

@@ -1,0 +1,1 @@
+create keyspace if not exists todo_keyspace with replication = {'class': 'SimpleStrategy', 'replication_factor': 2};
